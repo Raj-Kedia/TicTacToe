@@ -6,7 +6,9 @@ function handleCellClick(cellIndex) {
     if (board[cellIndex] === "" && gameActive) {
         board[cellIndex] = currentPlayer;
         document.getElementById(`cell-${cellIndex}`).textContent = currentPlayer;
-        if (checkWinner(currentPlayer)) {
+        const winningCombination = checkWinner(currentPlayer);
+        if (winningCombination !== null) {
+            drawWinningLine(winningCombination);
             document.getElementById("message").textContent = `Player ${currentPlayer} wins!`;
             gameActive = false;
         } else if (board.every(cell => cell !== "")) {
@@ -26,10 +28,59 @@ function checkWinner(player) {
         [0, 4, 8], [2, 4, 6]
     ];
 
-    return winningCombinations.some(combination => {
-        return combination.every(index => board[index] === player);
-    });
+    for (const combination of winningCombinations) {
+        const [a, b, c] = combination;
+        if (board[a] === player && board[b] === player && board[c] === player) {
+            return combination;
+        }
+    }
+
+    return null;
 }
+
+function drawWinningLine(combination) {
+    const canvasContainer = document.getElementById("board");
+    const canvas = document.createElement("canvas");
+    canvas.classList.add("winning-line");
+    canvas.width = canvasContainer.offsetWidth;
+    canvas.height = canvasContainer.offsetHeight;
+    canvasContainer.appendChild(canvas);
+
+    const ctx = canvas.getContext("2d");
+    ctx.strokeStyle = "#000";
+    ctx.lineWidth = 4;
+
+    const [a, b, c] = combination;
+    const cellA = document.getElementById(`cell-${a}`).getBoundingClientRect();
+    const cellB = document.getElementById(`cell-${b}`).getBoundingClientRect();
+    const cellC = document.getElementById(`cell-${c}`).getBoundingClientRect();
+
+    const pointA = {
+        x: cellA.left - canvasContainer.offsetLeft + cellA.width / 2,
+        y: cellA.top - canvasContainer.offsetTop + cellA.height / 2
+    };
+
+    const pointB = {
+        x: cellB.left - canvasContainer.offsetLeft + cellB.width / 2,
+        y: cellB.top - canvasContainer.offsetTop + cellB.height / 2
+    };
+
+    const pointC = {
+        x: cellC.left - canvasContainer.offsetLeft + cellC.width / 2,
+        y: cellC.top - canvasContainer.offsetTop + cellC.height / 2
+    };
+
+    canvas.style.position = "absolute";
+    canvas.style.top = "0";
+    canvas.style.left = "0";
+    canvas.style.zIndex = "2";
+
+    ctx.beginPath();
+    ctx.moveTo(pointA.x, pointA.y);
+    ctx.lineTo(pointC.x, pointC.y);
+    ctx.stroke();
+}
+
 
 function initializeGame() {
     board = ["", "", "", "", "", "", "", "", ""];
